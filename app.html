@@ -277,7 +277,8 @@ h1{font-size:clamp(30px,3.6vw,46px);font-weight:800;letter-spacing:-.04em;line-h
 @keyframes spin{to{transform:rotate(360deg)}}
 .draftbtn{margin-left:auto;background:var(--surface);border:1px solid var(--line);font-weight:600;font-size:14px;height:42px;padding:0 16px;border-radius:14px;transition:transform .25s var(--spring),border-color .2s,box-shadow .3s}
 .draftbtn:hover:not(:disabled){border-color:var(--pink-line);transform:translateY(-2px);box-shadow:0 14px 24px -14px var(--pink)}
-.pills{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.pills{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:480px){.pill{font-size:11px}}
 .pill{position:relative;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--faint);text-align:center;white-space:nowrap}
 .pill i{position:relative;z-index:1;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--mono);font-style:normal;background:var(--surface-solid);border:2px solid var(--line);transition:all .4s var(--spring)}
 .pill i svg{width:14px;height:14px}
@@ -666,8 +667,8 @@ let justId=null,shownMsgs=0,lastKey='';
 /* ---------------- Constants & helpers ---------------- */
 const KEY='banipu-demo-v1';
 const DAYS=['thứ Hai','thứ Ba','thứ Tư','thứ Năm','thứ Sáu','thứ Bảy','Chủ nhật'];
-const STAGES=['Mong muốn','Kết quả','Trở ngại','Kế hoạch'];
-const FIELDS=['wish','outcome','obstacle','plan'];
+const STAGES=['Mong muốn','Kết quả','Trở ngại','Kế hoạch','Phản biện'];
+const FIELDS=['wish','outcome','obstacle','plan','review'];
 const LOADS={nhe:{name:'Nhẹ',n:2,txt:'2 nhiệm vụ'},vua:{name:'Vừa',n:4,txt:'3–4 nhiệm vụ'},nhieu:{name:'Nhiều',n:5,txt:'5 nhiệm vụ'}};
 const START=new Date(2026,10,9); // thứ Hai 9/11/2026 = đầu tuần 1
 const CLASS_NAME='12X3';
@@ -716,7 +717,7 @@ function render(){
   const enter=key!==lastKey;lastKey=key;
   if(S.chat.length<shownMsgs)shownMsgs=0;
   app.innerHTML=header()+`<div class="shell"><aside class="side" aria-label="Điều hướng ứng dụng">${sideNav()}</aside>
-    <main class="main ${isChat?'is-chat':''} ${narrow?'is-narrow':''}" id="scr" tabindex="-1"><div class="main__in">${stu?studentScreen():teacherView()}${isChat&&S.stage<4?composer():''}</div></main></div>`+bottomNav();
+    <main class="main ${isChat?'is-chat':''} ${narrow?'is-narrow':''}" id="scr" tabindex="-1"><div class="main__in">${stu?studentScreen():teacherView()}${isChat&&S.stage<5?composer():''}</div></main></div>`+bottomNav();
   shownMsgs=S.chat.length;justId=null;
   if(isChat){const m=document.getElementById('msgs');if(m&&(S.chat.length>1||busy))window.scrollTo({top:document.body.scrollHeight,behavior:enter||REDUCE?'auto':'smooth'})}
   const ci=document.getElementById('chatIn');if(ci){ci.value=chatDraft;}
@@ -808,26 +809,26 @@ function chatScreen(){
       :`<div class="mrow me${nw}"><div class="msg me">${fmt(m.t)}</div></div>`}).join('');
   const typing=busy?`<div class="mrow bot new"><span class="bot-av sm">${IC.compass}</span><div class="msg bot"><span class="typing"><i></i><i></i><i></i></span></div></div>`:'';
   const chips=!busy&&S.chips&&S.chips.length?`<div class="chipset">${S.chips.map(c=>`<button class="chip" data-a="chip" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>`:'';
-  const cta=!busy&&st>=4&&S.draft?(()=>{const dd=S.draft,W=dd.woop,it=planItems('draft'),hrs=Math.round(it.reduce((a,x)=>a+x.dur,0)/6)/10;
-    return `<div class="plancard"><div class="pc-top"><span class="pc-ico">${IC.cal}</span><div><b>Banipu đã dựng xong lịch cho em</b><span>${it.length} buổi học · ${hrs} giờ trong tuần ${S.week}</span></div></div>
+  const cta=!busy&&st>=4&&S.draft&&(st>=5||S.reviewed)?(()=>{const dd=S.draft,W=dd.woop,it=planItems('draft'),hrs=Math.round(it.reduce((a,x)=>a+x.dur,0)/6)/10;
+    return `<div class="plancard"><div class="pc-top"><span class="pc-ico">${IC.cal}</span><div><b>${st>=5?'Kế hoạch đã sẵn sàng':'Bản nháp · cùng soát trước khi chốt'}</b><span>${it.length} buổi học · ${hrs} giờ trong tuần ${S.week}</span></div></div>
       <div class="pc-goal"><span class="kicker">Mục tiêu</span>${esc(W.wish)}</div>
       <div class="pc-days">${DSHORT.map((l,i)=>{const c=it.filter(x=>x.day===i).length;return `<span class="${c?'on':''}">${l}${c?`<i>${c}</i>`:''}</span>`}).join('')}</div>
       <div class="pc-if"><b>Nếu</b> ${esc(W.ifPart)}, <b>thì</b> ${esc(W.thenPart)}</div>
-      <button class="primary" data-a="openplan">Xem lịch và xuất ra${IC.arrow}</button></div>`})():'';
+      <button class="primary" data-a="openplan">Chốt và xem lịch${IC.arrow}</button></div>`})():'';
   return `<div class="chat-head"><div class="row"><span class="bot-av big">${IC.compass}</span><div><b style="font-size:18px;font-weight:700;letter-spacing:-.02em">Banipu</b><div class="sub">Trợ lý lập kế hoạch · tuần ${S.week} · đang trực tuyến</div></div>
       <button class="draftbtn" data-a="openplan" ${S.draft?'':'disabled'}>Kế hoạch nháp</button></div>
     <div class="pills">${STAGES.map((s,i)=>`<span class="pill ${i<st?'past':i===st?'now':''}"><i>${i<st?IC.check:i+1}</i>${s}</span>`).join('')}</div></div>
   <div class="msgs" id="msgs">${msgs}${typing}${chips}${cta}</div>`;
 }
 function composer(){
-  const off=busy||S.stage>=4;
-  return `<form class="composer" id="composer"><input id="chatIn" autocomplete="off" placeholder="${S.stage>=4?'Kế hoạch nháp đã sẵn sàng':'Nhập câu trả lời...'}" ${S.stage>=4?'disabled':''}><button class="send" type="submit" ${off?'disabled':''} aria-label="Gửi">${IC.send}</button></form>`;
+  const off=busy||S.stage>=5;
+  return `<form class="composer" id="composer"><input id="chatIn" autocomplete="off" placeholder="${S.stage===4?'Góp ý, hỏi lại hoặc nhờ Banipu chỉnh kế hoạch…':'Nhập câu trả lời...'}" ${S.stage>=5?'disabled':''}><button class="send" type="submit" ${off?'disabled':''} aria-label="Gửi">${IC.send}</button></form>`;
 }
 
 /* --- Kế hoạch nháp --- */
 function planScreen(){
   const d=S.draft;if(!d){S.planView=false;return chatScreen()}
-  const n=LOADS[d.load].n;
+  const n=draftN(d);
   const shown=d.pool.slice(0,n).sort((a,b)=>a.day-b.day),items=planItems('draft');
   const W=d.woop;
   return `<button class="back" data-a="closeplan">← Quay lại trò chuyện</button>
@@ -973,7 +974,7 @@ function startChat(){
   S.chat=[{r:'bot',t:S.current&&S.current.confirmed
     ?`Chào ${name}! Em đã có kế hoạch tuần ${S.week} rồi. Nếu muốn điều chỉnh, mình bắt đầu lại nhé: tuần này em muốn đạt được điều gì trong việc học?`
     :`Chào ${name}! Tuần này em muốn đạt được điều gì trong việc học?`}];
-  S.stage=0;S.col={};S.draft=null;S.planView=false;
+  S.stage=0;S.col={};S.draft=null;S.planView=false;S.asked={};S.reviewed=false;
   S.chips=['Ôn chắc một chương','Làm thêm đề luyện','Cải thiện môn còn yếu'];
 }
 
@@ -988,7 +989,15 @@ function parseIfThen(text,obstacle){
 function scriptedTurn(text){
   const st=S.stage,v=trimDot(text);
   if(v.length<3)return{reply:'Em nói rõ hơn một chút được không? Banipu muốn hiểu đúng ý em.',advance:false,chips:[]};
-  if(st===0)return{advance:true,value:cap(v.replace(/^(em|tớ|mình)\s+(muốn|sẽ|định|cần)\s+/i,'')),reply:(v.split(/\s+/).length>=5?'Mục tiêu rất cụ thể! ':'Mục tiêu hay đấy! ')+'Khi làm được điều đó, em sẽ cảm thấy thế nào?',chips:['Tự tin hơn khi kiểm tra','Nhẹ nhõm, bớt lo','Hiểu bài chắc hơn']};
+  if(st===0){
+    S.asked=S.asked||{};
+    const num=(v.match(/\d+/)||[])[0],last=lastPct();
+    if(!num&&!S.asked.measure){S.asked.measure=1;return{advance:false,reply:'Mục tiêu có hướng rồi! Để cuối tuần em tự đánh giá được, mình thêm **một con số** nhé: ví dụ "làm 3 đề", "học 40 từ mới", "ôn xong 2 bài". Em muốn đạt bao nhiêu?',chips:['Làm 3 đề luyện','Học 40 từ mới','Ôn xong 2 bài']}}
+    if(/^giữ\s+\d+$/i.test(v)&&S.asked.orig)return{advance:true,value:cap(S.asked.orig),reply:'Được, Banipu tôn trọng lựa chọn của em. Khi làm được điều đó, em sẽ cảm thấy thế nào?',chips:['Tự tin hơn khi kiểm tra','Nhẹ nhõm, bớt lo','Hiểu bài chắc hơn']};
+    if(/^giảm còn\s+\d+$/i.test(v)&&S.asked.orig){const nn=v.match(/\d+/)[0];return{advance:true,value:cap(S.asked.orig.replace(/\d+/,nn)),reply:'Con số vừa sức hơn rồi! Khi làm được điều đó, em sẽ cảm thấy thế nào?',chips:['Tự tin hơn khi kiểm tra','Nhẹ nhõm, bớt lo','Hiểu bài chắc hơn']}}
+    if(num&&+num>=6&&!S.asked.size){S.asked.size=1;S.asked.orig=v.replace(/^(em|tớ|mình)\s+(muốn|sẽ|định|cần)\s+/i,'');return{advance:false,reply:`${num} trong một tuần khá nhiều${last!=null?`, trong khi tuần trước em hoàn thành **${last}%** kế hoạch`:''}. Em có muốn bắt đầu với con số nhỏ hơn để chắc chắn làm được không? Nếu em vẫn muốn giữ, Banipu tôn trọng nhé.`,chips:[`Giữ ${num}`,`Giảm còn ${Math.max(2,Math.round(num/2))}`]}}
+  }
+  if(st===0)return{advance:true,value:cap(v.replace(/^(em|tớ|mình)\s+(muốn|sẽ|định|cần)\s+/i,'').replace(/^giữ\s+/i,'')),reply:(v.split(/\s+/).length>=5?'Mục tiêu rất cụ thể! ':'Mục tiêu hay đấy! ')+'Khi làm được điều đó, em sẽ cảm thấy thế nào?',chips:['Tự tin hơn khi kiểm tra','Nhẹ nhõm, bớt lo','Hiểu bài chắc hơn']};
   if(st===1)return{advance:true,value:cap(v),reply:'Nghe thật đáng mong chờ. Vậy điều gì **bên trong em** có thể cản trở kế hoạch này?',chips:['Em hay lướt điện thoại','Buổi tối em dễ mệt','Em không biết bắt đầu từ đâu']};
   if(st===2){
     const lv=v.toLowerCase();let chips;
@@ -998,7 +1007,7 @@ function scriptedTurn(text){
     else chips=['Nếu trở ngại đó xuất hiện, thì em hít thở và làm tiếp 10 phút'];
     return{advance:true,value:cap(v),reply:'Banipu hiểu rồi. Khi trở ngại đó xuất hiện, em sẽ làm gì? Thử nói theo dạng **Nếu… thì…** nhé.',chips};
   }
-  if(st===3){const p=parseIfThen(v,S.col.obstacle);return{advance:true,value:v,if_part:p.ifPart,then_part:p.thenPart,reply:'Tuyệt! Kế hoạch rất rõ ràng. Banipu đã soạn **kế hoạch nháp** — em xem và chỉnh lại theo ý mình nhé, em là người quyết định.',chips:[]}}
+  if(st===3){const p=parseIfThen(v,S.col.obstacle);return{advance:true,value:v,if_part:p.ifPart,then_part:p.thenPart,reply:'Tuyệt! Câu Nếu – thì rất rõ ràng. Banipu soạn **bản nháp** ngay đây, rồi mình cùng soát lại xem đã vừa sức chưa nhé.',chips:[]}}
   return{reply:'',advance:false,chips:[]};
 }
 
@@ -1008,7 +1017,9 @@ async function aiTurn(){
 Nguyên tắc:
 - Gọi học sinh là "em". Thân thiện, ấm áp, ngắn gọn (1–3 câu), mỗi lượt chỉ hỏi MỘT câu.
 - Không ra lệnh, không phán xét, không so sánh với bạn khác. Tôn trọng lựa chọn của em; chỉ gợi ý khi em bí.
-- Mục tiêu nên cụ thể, làm được trong 1 tuần; nếu quá mơ hồ hoặc quá lớn, hỏi để em tự thu hẹp.
+- Giai đoạn Mong muốn là lúc PHẢN BIỆN để xây mục tiêu hợp lý. Mục tiêu tốt = cụ thể + đo được (có con số hoặc sản phẩm rõ ràng) + vừa sức trong 1 tuần so với hồ sơ của em + phục vụ việc học. Thiếu tiêu chí nào thì advance=false và hỏi MỘT câu giúp em tự sửa (vd "Cuối tuần làm sao em biết mình đã đạt?"). Nếu mục tiêu lớn hơn hẳn mức em thường hoàn thành, nêu nhẹ số liệu trong hồ sơ và hỏi em có muốn thu nhỏ không; nếu em vẫn giữ ý, tôn trọng và advance=true. Không phản biện quá 2 lượt cho cùng một ý.
+- Giai đoạn Kết quả: giúp em nói ra lợi ích thật với bản thân (không phải điểm số người khác mong).
+- Giai đoạn Kế hoạch: nếu câu Nếu–thì mơ hồ (vd "thì em cố gắng"), hỏi một hành động nhỏ, cụ thể, làm ngay được.
 - Trở ngại phải là điều BÊN TRONG em (thói quen, cảm xúc, suy nghĩ). Nếu em nêu yếu tố bên ngoài, nhẹ nhàng hỏi điều gì trong em khiến việc đó cản trở.
 - Kế hoạch ở dạng "Nếu [tình huống/trở ngại], thì em [hành động cụ thể, nhỏ, làm ngay được]".
 - Nếu em bày tỏ căng thẳng nặng, buồn bã kéo dài hoặc ý nghĩ làm hại bản thân: tạm dừng việc lập kế hoạch, đáp lại ân cần và khuyến khích em nói ngay với thầy cô chủ nhiệm, phòng tư vấn tâm lý học đường hoặc người lớn em tin tưởng (advance=false).
@@ -1018,21 +1029,25 @@ Các giai đoạn: 0 Mong muốn (em muốn đạt gì tuần này), 1 Kết qu�
 Giai đoạn hiện tại: ${S.stage} (${STAGES[S.stage]}).
 Đã chốt: ${JSON.stringify(S.col)}
 
+Hồ sơ của em (dùng để cân nhắc, không đọc lại máy móc):
+${profileText()}
+
 Hội thoại gần đây:
 ${transcript}
 
 Xét câu trả lời mới nhất của học sinh cho giai đoạn hiện tại.
-- Nếu đủ rõ: advance=true; value = nội dung cô đọng (câu ngắn, viết hoa chữ đầu, không dấu chấm cuối); reply = ghi nhận ngắn + câu hỏi của giai đoạn kế tiếp. Ở giai đoạn 3: reply = lời khen ngắn và báo Banipu đã soạn kế hoạch nháp để em xem, chỉnh và tự quyết định; điền if_part (không có chữ "Nếu", viết thường chữ đầu) và then_part (không có chữ "thì", bắt đầu bằng "em ...").
+- Nếu đủ rõ: advance=true; value = nội dung cô đọng (câu ngắn, viết hoa chữ đầu, không dấu chấm cuối); reply = ghi nhận ngắn + câu hỏi của giai đoạn kế tiếp. Ở giai đoạn 3: reply = lời khen ngắn và nói Banipu sẽ soạn bản nháp rồi cùng em soát lại xem đã vừa sức chưa; điền if_part (không có chữ "Nếu", viết thường chữ đầu) và then_part (không có chữ "thì", bắt đầu bằng "em ...").
 - Nếu chưa rõ: advance=false; reply = một câu hỏi gợi mở để em tự làm rõ.
 - chips: 2–3 gợi ý trả lời ngắn (dưới 12 từ) cho câu hỏi trong reply, giọng học sinh; ở giai đoạn 2→3 chips là các câu Nếu–thì mẫu; mảng rỗng nếu không phù hợp hoặc khi đã xong.
 Có thể dùng **in đậm** cho 1–2 chữ quan trọng.
 Chỉ trả về JSON: {"reply":string,"advance":boolean,"value":string,"chips":string[],"if_part":string,"then_part":string}`;
-  return await sample.json(prompt,{cache:false,modelTier:'quick'});
+  return await sample.json(prompt,{cache:false,modelTier:'default'});
 }
 
 async function send(text){
   text=String(text||'').trim();
-  if(!text||busy||S.stage>=4)return;
+  if(!text||busy||S.stage>=5)return;
+  if(S.stage===4)return reviseSend(text);
   S.chat.push({r:'me',t:text});S.chips=[];chatDraft='';busy=true;render();
   let res=null;
   if(sample){try{res=await aiTurn();if(!res||typeof res.reply!=='string')res=null}catch(e){res=null;if(e&&e.code==='not_granted')sample=null}}
@@ -1049,9 +1064,130 @@ async function send(text){
   }
   S.chat.push({r:'bot',t:res.reply||'Em kể thêm cho Banipu nhé?'});
   S.chips=Array.isArray(res.chips)?res.chips.slice(0,3):[];
-  if(S.stage>=4){S.chips=[];await makeDraft()}
+  if(S.stage===4){S.chips=[];render();busy=true;await makeDraft();const rv=await reviewDraft();S.reviewed=true;S.chat.push({r:'bot',t:rv.message});S.chips=(rv.chips||[]).slice(0,3)}
   busy=false;render();
-  const ci=document.getElementById('chatIn');if(ci&&S.stage<4)ci.focus();
+  const ci=document.getElementById('chatIn');if(ci&&S.stage<5)ci.focus();
+}
+
+/* ---------------- Hồ sơ cá nhân hoá & bước Phản biện ---------------- */
+function lastPct(){const h=S.history[S.history.length-1];return h&&h.total?Math.round(h.done/h.total*100):null}
+function profileText(){
+  const L=S.history.slice(-4).map(h=>`- Tuần ${h.week}: hoàn thành ${h.done}/${h.total}${h.total?` (${Math.round(h.done/h.total*100)}%)`:''}, tự chấm ${h.selfRate}/5, tâm trạng ${h.mood}/5${h.good?`, làm tốt: "${h.good.split('\n')[0]}"`:''}${h.hard?`, khó khăn: "${h.hard}"`:''}`);
+  const st=ifStats();L.push(`- Kế hoạch Nếu–thì gần nhất: làm theo ${st.ok}/${st.total} lần`);
+  const wc=[];for(let d=0;d<7;d++){const c=S.checkins[ciKey(d)];if(c&&c.status&&c.phase!=='form')wc.push(`${DSHORT[d]}: ${CI[c.status].l}`)}
+  if(wc.length)L.push(`- Check-in tuần này: ${wc.join(', ')}`);
+  return L.join('\n')||'(chưa có lịch sử)';
+}
+const draftN=d=>Math.max(1,Math.min(d.count||LOADS[d.load].n,d.pool.length));
+function draftText(){
+  const d=S.draft,it=planItems('draft');
+  return `Khối lượng: ${LOADS[d.load].name}; tổng ${Math.round(it.reduce((a,x)=>a+x.dur,0))} phút\n`+it.map(x=>`- id ${x.t.id}: "${x.t.title}" · ${DAYS[x.day]} (day=${x.day}) ${fm(x.start)} · ${x.dur} phút`).join('\n');
+}
+function scriptedReview(){
+  const d=S.draft,W=d.woop,it=planItems('draft'),n=it.length,lp=lastPct(),pts=[];
+  const per={};it.forEach(x=>per[x.day]=(per[x.day]||0)+1);
+  const busyDay=Object.keys(per).find(k=>per[k]>=2);
+  const bad=weekCheckins().filter(c=>c.status!=='ok').length;
+  if(!/\d/.test(W.wish||''))pts.push('Mục tiêu chưa có con số đo được. Em thử thêm số lượng để cuối tuần dễ tự đánh giá nhé?');
+  if(lp!=null&&lp<70&&n>=4)pts.push(`Tuần trước em hoàn thành **${lp}%**, tuần này có ${n} buổi. Em có chắc giữ được nhịp này không, hay bớt 1 buổi cho thoải mái?`);
+  if(!it.some(x=>/xem lại|lỗi|ôn/i.test(x.t.title)))pts.push('Chưa có buổi **xem lại lỗi sai**. Làm thêm mà không xem lại thì dễ sai lặp lại. Em có muốn thêm một buổi ngắn không?');
+  if(busyDay!=null)pts.push(`${cap(DAYS[busyDay])} có ${per[busyDay]} buổi liền nhau. Em có muốn dời bớt sang ngày khác không?`);
+  if(bad)pts.push(`Tuần này em đã có ${bad} ngày check-in chưa ổn, nên ưu tiên buổi ngắn và ngủ đủ nhé.`);
+  if((W.thenPart||'').split(/\s+/).length<4)pts.push('Câu Nếu – thì còn hơi chung. Hành động cụ thể nhỏ nhất em sẽ làm ngay là gì?');
+  const msg=`Bản nháp có **${n} buổi**, khoảng **${Math.round(it.reduce((a,x)=>a+x.dur,0)/6)/10} giờ** trong tuần. Mục tiêu và câu Nếu – thì đã khớp với nhau 👍`+
+    (pts.length?`\n\nBanipu soát lại thấy vài điểm em nên cân nhắc:\n${pts.slice(0,3).map(x=>'• '+x).join('\n')}\n\nEm muốn chỉnh gì, hay giữ nguyên?`:'\n\nBanipu thấy kế hoạch đã vừa sức. Em muốn chỉnh gì thêm, hay chốt luôn?');
+  const chips=['Giữ nguyên, chốt luôn'];
+  if(pts.some(x=>/bớt/.test(x)))chips.push('Bớt 1 buổi');
+  if(pts.some(x=>/xem lại lỗi/.test(x)))chips.push('Thêm buổi xem lại lỗi');
+  if(chips.length<3)chips.push('Dời buổi sang cuối tuần');
+  return{message:msg,chips:chips.slice(0,3)};
+}
+async function reviewDraft(){
+  if(sample){
+    try{
+      const W=S.draft.woop;
+      const r=await sample.json(`Bạn là Banipu – người bạn đồng hành học tập cho học sinh THPT, dựa trên Thuyết Tự quyết. Em vừa hoàn thành WOOP và Banipu đã soạn bản nháp. Giờ là bước PHẢN BIỆN: giúp em soát kế hoạch trước khi chốt.
+Mục tiêu: ${W.wish}
+Kết quả mong muốn: ${W.outcome}
+Trở ngại bên trong: ${W.obstacle}
+Nếu ${W.ifPart}, thì ${W.thenPart}
+Bản nháp:
+${draftText()}
+Hồ sơ của em:
+${profileText()}
+
+Soát theo: (1) mục tiêu có cụ thể, đo được, làm được trong 1 tuần; (2) khối lượng so với mức em thường hoàn thành; (3) tổng thời gian và phân bố ngày, có ngày nào quá dồn; (4) các buổi có thực sự dẫn tới mục tiêu không (vd có xem lại lỗi sai); (5) câu Nếu–thì có nhắm đúng trở ngại và đủ cụ thể; (6) check-in gần đây chưa ổn thì cân nhắc giảm tải.
+Viết "message" bằng tiếng Việt, gọi "em": 1 câu ghi nhận điểm tốt có số liệu (số buổi, tổng giờ); rồi 1–3 điểm phản biện QUAN TRỌNG NHẤT, mỗi điểm một dòng bắt đầu bằng "• ", kèm câu hỏi hoặc gợi ý cụ thể; cuối cùng hỏi em muốn chỉnh gì hay giữ nguyên. Không ra lệnh, không chấm điểm; nếu kế hoạch đã ổn thì nói thẳng là ổn. Có thể **in đậm** 1–2 cụm.
+"chips": 2–3 câu ngắn em có thể bấm để trả lời (vd "Giữ nguyên, chốt luôn", "Bớt 1 buổi").
+Chỉ trả về JSON: {"message":string,"chips":string[]}`,{cache:false,modelTier:'default'});
+      if(r&&typeof r.message==='string'&&r.message.trim())return{message:r.message.trim(),chips:Array.isArray(r.chips)?r.chips:[]};
+    }catch(e){}
+  }
+  return scriptedReview();
+}
+const DURS=[20,30,45,60,90,120];
+function applyDraftOps(ops){
+  const d=S.draft;let n=0;
+  (Array.isArray(ops)?ops:[]).forEach(o=>{
+    if(!o||!o.type)return;
+    const t=o.id!=null?d.pool.find(x=>x.id==o.id):null;
+    if(o.type==='load'&&LOADS[o.value]){d.load=o.value;delete d.count;n++}
+    else if(o.type==='remove'&&t){const i=d.pool.indexOf(t),k=draftN(d);if(k<=1)return;d.pool.splice(i,1);if(i<k)d.count=k-1;n++}
+    else if(o.type==='add'&&o.title){const k=draftN(d),day=Number.isInteger(o.day)&&o.day>=0&&o.day<=6?o.day:6;d.pool.splice(k,0,{id:nid(),title:trimDot(String(o.title)).slice(0,80),day,dur:DURS.includes(o.dur)?o.dur:30});d.count=k+1;n++}
+    else if(o.type==='rename'&&t&&o.title){t.title=trimDot(String(o.title)).slice(0,80);n++}
+    else if(o.type==='move'&&t&&Number.isInteger(o.day)&&o.day>=0&&o.day<=6){t.day=o.day;delete t.time;n++}
+    else if(o.type==='dur'&&t&&DURS.includes(o.dur)){t.dur=o.dur;n++}
+    else if(o.type==='time'&&t&&toMin(o.time)!=null){t.time=o.time;n++}
+  });
+  return n;
+}
+function scriptedRevise(text){
+  const v=text.toLowerCase(),d=S.draft,shown=d.pool.slice(0,draftN(d));
+  if(/chốt|giữ nguyên|^ok|được rồi|đồng ý|ổn rồi|không chỉnh/.test(v))return{done:true,reply:'Tuyệt! Em bấm **Chốt và xem lịch** để lưu kế hoạch và xuất ra lịch nhé. Chúc em một tuần thật vững vàng!',chips:[]};
+  if(/bớt|giảm|nhẹ|ít lại/.test(v)){const t=[...shown].reverse().find(x=>!/xem lại|lỗi/i.test(x.title))||shown[shown.length-1];
+    return{ops:[{type:'remove',id:t.id}],reply:`Banipu đã bỏ buổi "**${t.title}**". Còn ${shown.length-1} buổi, vừa sức hơn rồi. Em thấy ổn chưa?`,chips:['Ổn rồi, chốt luôn','Bớt thêm 1 buổi']}}
+  if(/thêm/.test(v)){const busy=new Set(shown.map(x=>x.day));const day=[6,5,4,2,0].find(x=>!busy.has(x))??6;const title=/lỗi|xem lại/.test(v)?'Xem lại lỗi sai và ghi chú':'Ôn lại phần còn yếu';
+    return{ops:[{type:'add',title,day,dur:30}],reply:`Đã thêm buổi "**${title}**" (30 phút, ${DAYS[day]}). Buổi ngắn thôi để không quá tải nhé. Em muốn chỉnh gì nữa không?`,chips:['Ổn rồi, chốt luôn','Bớt 1 buổi']}}
+  const dm=DAYS.findIndex(x=>v.includes(x.toLowerCase().replace('thứ ','thứ ')))
+  if(/dời|chuyển/.test(v)){const day=dm>=0?dm:(/cuối tuần/.test(v)?5:-1);const t=shown.find(x=>x.day<5&&x.day!==day)||shown[0];
+    if(day>=0)return{ops:[{type:'move',id:t.id,day}],reply:`Đã dời "**${t.title}**" sang **${DAYS[day]}**. Em xem lịch bên dưới nhé, còn muốn chỉnh gì không?`,chips:['Ổn rồi, chốt luôn']};
+    return{reply:'Em muốn dời buổi nào sang ngày nào? Ví dụ: "dời đề luyện số 3 sang Chủ nhật".',chips:['Dời sang cuối tuần']}}
+  return{reply:'Banipu chưa hiểu rõ em muốn chỉnh gì. Em có thể nói: "bớt 1 buổi", "thêm buổi xem lại lỗi", "dời sang thứ Bảy", hoặc "chốt".',chips:['Giữ nguyên, chốt luôn','Bớt 1 buổi','Thêm buổi xem lại lỗi']};
+}
+async function aiRevise(text){
+  const W=S.draft.woop;
+  const transcript=S.chat.slice(-10).map(m=>(m.r==='bot'?'Banipu: ':'Học sinh: ')+m.t).join('\n');
+  return await sample.json(`Bạn là Banipu – người bạn đồng hành học tập cho học sinh THPT, dựa trên Thuyết Tự quyết. Đang ở bước PHẢN BIỆN: em và Banipu cùng soát bản nháp kế hoạch tuần trước khi chốt.
+Mục tiêu: ${W.wish} · Trở ngại: ${W.obstacle} · Nếu ${W.ifPart}, thì ${W.thenPart}
+Bản nháp hiện tại:
+${draftText()}
+Hồ sơ của em:
+${profileText()}
+Hội thoại gần đây:
+${transcript}
+Tin nhắn mới của em: "${text}"
+
+Việc của Banipu:
+- Hiểu em muốn chỉnh gì và thực hiện bằng "ops". Nếu thay đổi em muốn có vẻ chưa hợp lý (vd dồn 3–4 buổi vào một tối, bỏ hết buổi xem lại lỗi, tăng tải khi vừa check-in mệt), phản biện nhẹ: nêu lý do ngắn, đề xuất phương án khác và hỏi lại; nếu em vẫn giữ ý thì tôn trọng và làm theo.
+- Nếu em hỏi vì sao một buổi được xếp như vậy, giải thích ngắn gọn.
+- Nếu em chốt/đồng ý ("ok", "chốt", "được rồi"), done=true và reply nhắc em bấm nút **Chốt và xem lịch**.
+- Nếu em hỏi ngoài chủ đề kế hoạch học, nhẹ nhàng đưa về. Nếu em bày tỏ căng thẳng nặng hay ý nghĩ làm hại bản thân: dừng chỉnh kế hoạch, đáp ân cần và khuyên em nói ngay với GVCN, phòng tư vấn tâm lý học đường hoặc người lớn em tin tưởng.
+- "reply" 1–4 câu, tiếng Việt, gọi "em", có thể **in đậm** 1–2 cụm. "chips" 2–3 câu ngắn em có thể bấm tiếp.
+ops hợp lệ: {"type":"load","value":"nhe|vua|nhieu"}, {"type":"remove","id":số}, {"type":"add","title":string,"day":0-6,"dur":20|30|45|60|90|120}, {"type":"rename","id":số,"title":string}, {"type":"move","id":số,"day":0-6}, {"type":"dur","id":số,"dur":20|30|45|60|90|120}, {"type":"time","id":số,"time":"HH:MM"}. day: 0=thứ Hai … 6=Chủ nhật. Chỉ dùng id có trong bản nháp.
+Chỉ trả về JSON: {"reply":string,"ops":[],"chips":string[],"done":boolean}`,{cache:false,modelTier:'default'});
+}
+async function reviseSend(text){
+  S.chat.push({r:'me',t:text});S.chips=[];chatDraft='';busy=true;render();
+  let res=null;
+  if(sample){try{res=await aiRevise(text);if(!res||typeof res.reply!=='string')res=null}catch(e){res=null;if(e&&e.code==='not_granted')sample=null}}
+  if(!res)res=scriptedRevise(text);
+  const n=applyDraftOps(res.ops||[]);
+  S.chat.push({r:'bot',t:res.reply||'Em nói thêm cho Banipu nhé?'});
+  S.chips=Array.isArray(res.chips)?res.chips.slice(0,3):[];
+  if(res.done){S.stage=5;S.chips=[]}
+  busy=false;render();
+  if(n)toast(`Đã cập nhật bản nháp (${n} thay đổi)`,'🛠️');
+  const ci=document.getElementById('chatIn');if(ci&&S.stage<5)ci.focus();
 }
 
 /* ---------------- Draft plan ---------------- */
@@ -1081,17 +1217,21 @@ Mục tiêu: ${W.wish}
 Kết quả mong muốn: ${W.outcome}
 Trở ngại bên trong: ${W.obstacle}
 Kế hoạch Nếu–thì: Nếu ${W.ifPart}, thì ${W.thenPart}
+Hồ sơ của em:
+${profileText()}
 Yêu cầu:
 - Mỗi nhiệm vụ cụ thể, làm được trong một buổi tự học (30–90 phút), tên ngắn dưới 10 từ, không đánh số thứ tự ở đầu, không có dấu chấm cuối.
 - Nếu mục tiêu có số lượng (vd "3 đề"), 4 nhiệm vụ đầu phải bao trọn mục tiêu đó (gồm một nhiệm vụ xem lại lỗi sai); nhiệm vụ thứ 5 là phần mở rộng tuỳ chọn. 2 nhiệm vụ đầu là phần cốt lõi nhất.
 - day: 0=thứ Hai, 1=thứ Ba, 2=thứ Tư, 3=thứ Năm, 4=thứ Sáu, 5=thứ Bảy, 6=Chủ nhật; rải đều, tránh trùng ngày.
 - dur: số phút dự kiến cho buổi đó (20, 30, 45, 60, 90 hoặc 120), hợp lý với nội dung.
-Chỉ trả về JSON: {"tasks":[{"title":string,"day":number,"dur":number}]}`,{cache:false,modelTier:'quick'});
+- Tránh ngày em vừa check-in chưa ổn; nếu hồ sơ cho thấy em hay mệt hoặc hoàn thành thấp, ưu tiên buổi ngắn.
+Chỉ trả về JSON: {"tasks":[{"title":string,"day":number,"dur":number}]}`,{cache:false,modelTier:'default'});
       if(r&&Array.isArray(r.tasks)&&r.tasks.length>=2)tasks=r.tasks.slice(0,5).map((t,i)=>({id:nid(),title:trimDot(t.title||'Nhiệm vụ '+(i+1)),day:Number.isInteger(t.day)&&t.day>=0&&t.day<=6?t.day:PRIORITY_DAYS[i],dur:[20,30,45,60,90,120].includes(t.dur)?t.dur:undefined}));
     }catch(e){}
   }
   if(!tasks)tasks=ruleTasks(W.wish||'').map((t,i)=>({id:nid(),title:t,day:PRIORITY_DAYS[i]}));
-  S.draft={woop:W,load:'vua',pool:tasks,slot:'toi'};
+  const lp=lastPct();
+  S.draft={woop:W,load:lp!=null&&lp<50?'nhe':'vua',pool:tasks,slot:'toi'};
 }
 
 /* ---------------- Reflection feedback ---------------- */
@@ -1112,7 +1252,8 @@ async function getFeedback(e){
     try{
       const r=await sample(`Bạn là Banipu – trợ lý học tập dựa trên Thuyết Tự quyết. Viết phản hồi ngắn (3–5 câu, tiếng Việt, gọi học sinh là "em") cho bài tự đánh giá cuối tuần dưới đây.
 Yêu cầu: ghi nhận nỗ lực cụ thể (năng lực), không chấm điểm, không so sánh với bạn khác, không ra lệnh — chỉ gợi ý và nhấn mạnh em là người quyết định (tự chủ); giọng ấm áp (gắn kết). Gợi ý 1 điều nhỏ cho tuần sau dựa trên khó khăn em nêu. Nếu tỉ lệ hoàn thành dưới 50% có thể gợi ý chọn khối lượng nhẹ hơn. Nếu tâm trạng ≤ 2, thêm một câu nhẹ nhàng khuyến khích em chia sẻ với thầy cô chủ nhiệm hoặc phòng tư vấn tâm lý học đường. Không dùng tiêu đề hay gạch đầu dòng; có thể **in đậm** 1–2 cụm từ.
-Dữ liệu: mục tiêu "${S.current&&S.current.woop?S.current.woop.wish:'(chưa lập)'}"; hoàn thành ${e.done}/${e.total}; tự đánh giá ${e.selfRate}/5; tâm trạng ${e.mood}/5; điều làm tốt: "${e.good||'(trống)'}"; khó khăn: "${e.hard||'(trống)'}".`,{cache:false,modelTier:'quick'});
+Hồ sơ các tuần trước: ${profileText()}
+Dữ liệu tuần này: mục tiêu "${S.current&&S.current.woop?S.current.woop.wish:'(chưa lập)'}"; hoàn thành ${e.done}/${e.total}; tự đánh giá ${e.selfRate}/5; tâm trạng ${e.mood}/5; điều làm tốt: "${e.good||'(trống)'}"; khó khăn: "${e.hard||'(trống)'}".`,{cache:false,modelTier:'default'});
       if(r&&r.text&&r.text.trim())return r.text.trim();
     }catch(err){}
   }
@@ -1148,7 +1289,7 @@ function sched(list,slot){
   return out.sort((a,b)=>a.day-b.day||a.start-b.start);
 }
 function planItems(src){
-  if(src==='draft'){const d=S.draft;return sched(d.pool.slice(0,LOADS[d.load].n),d.slot||'toi')}
+  if(src==='draft'){const d=S.draft;return sched(d.pool.slice(0,draftN(d)),d.slot||'toi')}
   const c=S.current;return sched(c.tasks.filter(t=>!t.postponed),c.slot||'toi');
 }
 const planWoop=src=>src==='draft'?S.draft.woop:S.current.woop;
@@ -1301,12 +1442,13 @@ Trạng thái: ${CI[c.status].l}. Giấc ngủ đêm qua: ${SLEEP[c.sleep]||'kh�
 Số ngày chưa ổn tuần này (kể cả hôm nay): ${badOtherDays()+1}.
 Nhiệm vụ chưa xong trong tuần:
 ${list}
+Hồ sơ của em: ${profileText()}
 
 Viết "message": 2–4 câu ấm áp, gọi học sinh là "em", ghi nhận cảm xúc, KHÔNG chẩn đoán hay khuyên dùng thuốc. Nếu không khoẻ: nhắc nghỉ ngơi và báo thầy cô chủ nhiệm hoặc xuống phòng y tế trường nếu sốt, đau nhiều, mệt kéo dài. Nếu căng thẳng: gợi ý chia nhỏ việc và nhắc có thể nói chuyện với GVCN hoặc phòng tư vấn tâm lý học đường nếu kéo dài. Kết thúc bằng câu mời em chọn cách điều chỉnh.
 Đề xuất 2–3 "options" khác nhau để điều chỉnh lịch phù hợp với sức khoẻ, ưu tiên các nhiệm vụ hôm nay và ngày mai. Mỗi option có label (dưới 6 từ), desc (dưới 16 từ), ops gồm các thao tác:
 {"type":"move","id":số,"day":số ≥ ${TI}} chuyển ngày; {"type":"lite","id":số} làm bản nhẹ ~20 phút; {"type":"postpone","id":số} tạm hoãn sang tuần sau.
 Không dời nhiệm vụ vào hôm nay khi em không khoẻ; tránh dồn nhiều việc vào một ngày.
-Chỉ trả về JSON: {"message":string,"options":[{"label":string,"desc":string,"ops":[...]}]}`,{cache:false,modelTier:'quick'});
+Chỉ trả về JSON: {"message":string,"options":[{"label":string,"desc":string,"ops":[...]}]}`,{cache:false,modelTier:'default'});
       if(r&&typeof r.message==='string'&&r.message.trim())message=r.message.trim();
       if(r&&Array.isArray(r.options))options=r.options.slice(0,3).map(o=>({label:String(o.label||'Điều chỉnh'),desc:String(o.desc||''),ops:validOps(o.ops)})).filter(o=>o.ops.length);
     }catch(e){}
@@ -1358,7 +1500,7 @@ const A={
   chip(el){send(el.dataset.v)},
   openplan(){if(S.draft){S.planView=true;S.editId=null;render()}},
   closeplan(){S.planView=false;S.editId=null;render()},
-  load(el){S.draft.load=el.dataset.v;S.editId=null;render()},
+  load(el){S.draft.load=el.dataset.v;delete S.draft.count;S.editId=null;render()},
   edit(el){S.editId=Number(el.dataset.id);render();const i=document.getElementById('ed-title');if(i){i.focus();i.select()}},
   editcancel(){S.editId=null;render()},
   editsave(el){const t=S.draft.pool.find(x=>x.id==el.dataset.id);const ti=document.getElementById('ed-title').value.trim();
@@ -1375,7 +1517,7 @@ const A={
     window.addEventListener('afterprint',done);setTimeout(()=>window.print(),60)},
   restart(){startChat();S.tab='banipu';render()},
   confirm(){
-    const d=S.draft,n=LOADS[d.load].n,prev=S.current&&S.current.tasks||[];
+    const d=S.draft,n=draftN(d),prev=S.current&&S.current.tasks||[];
     const tasks=d.pool.slice(0,n).map(t=>({id:t.id,title:t.title,day:t.day,time:t.time,dur:t.dur,done:!!prev.find(p=>p.title===t.title&&p.done)}));
     S.current={confirmed:true,load:d.load,slot:d.slot||'toi',woop:{...d.woop},tasks};
     S.draft=null;S.planView=false;S.chat=[];S.stage=0;S.tab='week';render();
